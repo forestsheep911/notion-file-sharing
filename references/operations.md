@@ -19,6 +19,23 @@ Override identifiers, never secret values, with CLI options or environment varia
 
 ## Modes
 
+Initialize or verify the fixed Shared Zone database contract:
+
+```powershell
+# Read-only inspection and create/verify plan.
+node scripts/shared-zone-schema.mjs
+
+# Create only missing exact-name databases, then read back both schemas.
+node scripts/shared-zone-schema.mjs --apply
+
+# Require both databases to exist and verify their exact schemas.
+node scripts/shared-zone-schema.mjs --verify-only
+```
+
+The initializer is idempotent by exact child-database title. It stops on duplicate names or schema drift, stores only safe IDs and verification evidence in `.notion-file-sharing/shared-zone-schema.json`, creates no records, and never changes sharing permissions. The complete contract is in [shared-zone-schema.md](shared-zone-schema.md).
+
+Upload modes:
+
 ```powershell
 # No network writes: inspect the plan and compute the file hash.
 node scripts/notion-file-share.mjs --file "C:\path\report.pdf"

@@ -1,11 +1,13 @@
 ---
 name: notion-file-sharing
-description: Upload local files to a Notion page with Azure Key Vault credential lookup, DIRECT-route enforcement, resumable multipart state, idempotency guards, and live block readback. Use for shared-file delivery through Notion; do not use for project-specific media catalogs, metadata schemas, or website publication.
+description: Initialize and verify the user's Notion Shared Zone databases, or upload local files to a Notion page with Azure Key Vault credential lookup, DIRECT-route enforcement, resumable multipart state, idempotency guards, and live block readback. Use for shared-file delivery through Notion; do not use for project-specific media catalogs or website publication.
 ---
 
 # Notion File Sharing
 
-Use the bundled script for the transport layer. Keep project-specific naming, metadata, database properties, and publication gates in the calling project.
+Use the bundled scripts for the Shared Zone structure and file transport. Keep project-specific naming, metadata, and publication gates in the calling project.
+
+For Shared Zone database creation or verification, read [references/shared-zone-schema.md](references/shared-zone-schema.md) first. Run `node scripts/shared-zone-schema.mjs` for a read-only plan, `--apply` to create missing databases, and `--verify-only` for an exact schema readback. The initializer never creates records or changes sharing permissions.
 
 ## Workflow
 
@@ -18,7 +20,7 @@ Use the bundled script for the transport layer. Keep project-specific naming, me
 
 Default credential lookup uses Azure Key Vault `kv-boccaro-shared-e9219`, secrets `notion-shared-zone-page-id` and `notion-shared-zone-api-key`. Environment variables or CLI names can override those identifiers without storing secret values in the repository or state.
 
-For commands, recovery behavior, route configuration, supported block types, and current API constraints, read [references/operations.md](references/operations.md). Run `node scripts/notion-file-share.mjs --help` before using unfamiliar options.
+For commands, recovery behavior, route configuration, supported block types, and current API constraints, read [references/operations.md](references/operations.md). Run a script's `--help` before using unfamiliar options.
 
 ## Guardrails
 

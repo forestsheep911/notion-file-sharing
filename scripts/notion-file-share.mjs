@@ -3,7 +3,6 @@ import fs from "node:fs";
 import http from "node:http";
 import https from "node:https";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
 import { setTimeout as sleep } from "node:timers/promises";
 import { pathToFileURL } from "node:url";
 import {
@@ -11,6 +10,7 @@ import {
   inferBlockType, inferMime, isTransient, normalizeNotionId, readJson,
   sha256File, writeJsonAtomic
 } from "./lib/core.mjs";
+import { resolveNotionCredentials } from "./lib/credentials.mjs";
 
 const HELP = `Usage: node scripts/notion-file-share.mjs --file <path> [mode] [options]
 
@@ -89,25 +89,6 @@ export function parseArgs(argv) {
   if (Boolean(options.resolveIp) !== Boolean(options.localAddress)) throw new Error("--resolve-ip and --local-address must be used together.");
   if (options.resolveIp && options.expectedChain.join(">") === DEFAULTS.expectedChain.join(">")) options.expectedChain = ["DIRECT"];
   return options;
-}
-
-function azSecret(vault, name) {
-  if (!/^[A-Za-z0-9-]{1,127}$/u.test(vault) || !/^[A-Za-z0-9-]{1,127}$/u.test(name)) throw new Error("Unsafe Azure Key Vault identifier.");
-  const common = ["keyvault", "secret", "show", "--vault-name", vault, "--name", name, "--query", "value", "--output", "tsv", "--only-show-errors"];
-  const executable = process.platform === "win32" ? (process.env.ComSpec || "cmd.exe") : "az";
-  const args = process.platform === "win32" ? ["/d", "/s", "/c", `az ${common.join(" ")}`] : common;
-  const result = spawnSync(executable, args, { encoding: "utf8", windowsHide: true, maxBuffer: 1024 * 1024 });
-  if (result.status !== 0) throw new Error(`Azure Key Vault lookup failed for ${name}: ${(result.stderr || "unknown error").trim()}`);
-  const value = result.stdout.trim();
-  if (!value) throw new Error(`Azure Key Vault secret is empty: ${name}`);
-  return value;
-}
-
-function credentials(options, needToken) {
-  const pageId = normalizeNotionId(options.pageId || process.env.NOTION_PAGE_ID || azSecret(options.vaultName, options.pageIdSecret));
-  const token = needToken ? (process.env.NOTION_API_KEY || azSecret(options.vaultName, options.apiKeySecret)) : "";
-  if (needToken && !/^(?:ntn_|secret_)[A-Za-z0-9_-]{20,}$/u.test(token)) throw new Error("Resolved Notion API key has an unexpected format.");
-  return { pageId, token };
 }
 
 function controllerRequest(options, pathname) {
@@ -255,7 +236,7 @@ async function main() {
   const options = parseArgs(process.argv.slice(2)); if (options.help) { console.log(HELP); return; }
   const stat = fs.statSync(options.file); const sha256 = await sha256File(options.file); const plan = buildPartPlan(stat.size, options.partMiB);
   const blockType = inferBlockType(options.file, options.blockType); const mime = inferMime(options.file); const caption = options.caption || path.basename(options.file);
-  const needToken = options.mode !== "dry-run"; const { pageId, token } = credentials(options, needToken);
+  const needToken = options.mode !== "dry-run"; const { pageId, token } = resolveNotionCredentials(options, needToken);
   const statePath = path.resolve(options.state || defaultStatePath(options.file, sha256));
   const summary = { mode: options.mode, file: options.file, bytes: stat.size, sha256, pageId, blockType, mime, partCount: plan.count, partMiB: options.partMiB, statePath };
   if (options.mode === "dry-run") { console.log(JSON.stringify(summary, null, 2)); return; }
