@@ -1,0 +1,4 @@
+interface:
+  display_name: "Notion File Sharing"
+  short_description: "Upload and verify files in Notion safely"
+  default_prompt: "Use $notion-file-sharing to upload these files to a Notion page with resumable state and route verification."

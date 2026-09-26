@@ -1,0 +1,13 @@
+{
+  "name": "notion-file-sharing-skill",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test scripts/*.test.mjs",
+    "check": "node --check scripts/notion-file-share.mjs && node --test scripts/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
