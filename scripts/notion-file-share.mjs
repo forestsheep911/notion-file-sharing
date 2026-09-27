@@ -185,6 +185,25 @@ class NotionApi {
             resolve({ data, status: response.statusCode ?? 0 });
           });
         });
+        if (sampleRoute && this.options.resolveIp && this.options.localAddress) {
+          request.once("socket", socket => {
+            const recordBoundSocket = () => {
+              const remoteAddress = String(socket.remoteAddress ?? "").replace(/^::ffff:/u, "");
+              const localAddress = String(socket.localAddress ?? "").replace(/^::ffff:/u, "");
+              if (remoteAddress === this.options.resolveIp && localAddress === this.options.localAddress) {
+                observed.push({
+                  id: `bound-socket-${startedAt}`,
+                  chains: ["DIRECT"],
+                  uploadedBytes: Number(socket.bytesWritten ?? 0),
+                  localAddress,
+                  remoteAddress
+                });
+              }
+            };
+            if (socket.encrypted && socket.remoteAddress) recordBoundSocket();
+            else socket.once("secureConnect", recordBoundSocket);
+          });
+        }
         request.setTimeout(600000, () => request.destroy(Object.assign(new Error("Notion request timed out."), { code: "ETIMEDOUT" })));
         request.on("error", reject); if (payload) request.write(payload); request.end();
       });

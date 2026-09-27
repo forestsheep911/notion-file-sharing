@@ -29,7 +29,9 @@ const MIME_BY_EXTENSION = Object.freeze({
 });
 
 export function normalizeNotionId(value) {
-  const compact = String(value ?? "").match(/[0-9a-f]{32}/iu)?.[0]?.toLowerCase();
+  const input = String(value ?? "");
+  const uuid = input.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/iu)?.[0];
+  const compact = (uuid?.replaceAll("-", "") ?? input.match(/[0-9a-f]{32}/iu)?.[0])?.toLowerCase();
   if (!compact) throw new Error("A valid 32-hex Notion page ID or URL is required.");
   return `${compact.slice(0, 8)}-${compact.slice(8, 12)}-${compact.slice(12, 16)}-${compact.slice(16, 20)}-${compact.slice(20)}`;
 }

@@ -9,6 +9,10 @@ test("normalizes a page URL to a UUID", () => {
     normalizeNotionId("https://app.notion.com/p/name-1234567890abcdef1234567890abcdef?source=copy_link"),
     "12345678-90ab-cdef-1234-567890abcdef"
   );
+  assert.equal(
+    normalizeNotionId("12345678-90ab-cdef-1234-567890abcdef"),
+    "12345678-90ab-cdef-1234-567890abcdef"
+  );
 });
 
 test("plans a single upload at 20 MiB and multipart above it", () => {

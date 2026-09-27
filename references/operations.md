@@ -69,6 +69,12 @@ Useful overrides:
 
 `--route-check off` removes a safety gate. Use it only when the user explicitly accepts missing route evidence for that transfer. It is not a workaround for a failed or proxy route.
 
+When both `--resolve-ip` and `--local-address` are supplied, the uploader also
+checks the live TLS socket. It accepts bound-route evidence only when the socket's
+actual local address equals the requested physical LAN address and its remote
+address equals the freshly resolved Notion API address; the accepted chain is
+recorded as `DIRECT`.
+
 ## API and size behavior
 
 The default Notion API version is `2026-03-11`. Files up to 20 MiB use `single_part`; larger files use `multi_part` with serial 20 MiB parts. Notion requires non-final multipart parts to be between 5 and 20 MiB. The current official limit for API bots in paid workspaces is 5 GB per file. Recheck official Notion documentation before relying on these limits in a long-lived workflow.
