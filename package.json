@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test scripts/*.test.mjs",
-    "check": "node --check scripts/notion-file-share.mjs && node --check scripts/shared-zone-schema.mjs && node --test scripts/*.test.mjs"
+    "check": "node scripts/check.mjs",
+    "test": "node --test scripts/*.test.mjs"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.16"
   }
 }

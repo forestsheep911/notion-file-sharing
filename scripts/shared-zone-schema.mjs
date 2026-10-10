@@ -2,6 +2,8 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DEFAULTS, isTransient, writeJsonAtomic } from "./lib/core.mjs";
+import { loadTransport } from "./lib/transport.mjs";
+const { Coordinator } = await loadTransport("lib/coordinator.mjs");
 import { resolveNotionCredentials } from "./lib/credentials.mjs";
 
 const PRIVATE_TITLE = "共享文件｜私人库";
@@ -184,9 +186,10 @@ function help() {
     `Options: --page-id --vault-name --page-id-secret --api-key-secret --state`;
 }
 
-export async function runSchema(options) {
+async function runSchemaInternal(options, coordinator) {
   const { pageId, token } = resolveNotionCredentials(options, true);
-  const client = new NotionClient(token);
+  const original = new NotionClient(token);
+  const client = { request: (...args) => coordinator.api(() => original.request(...args)) };
   const children = await listRootChildren(client, pageId);
   const findings = SHARED_ZONE_DATABASES.map(contract => ({
     contract,
@@ -227,6 +230,11 @@ export async function runSchema(options) {
   const statePath = path.resolve(options.statePath ?? path.join(process.cwd(), ".notion-file-sharing", "shared-zone-schema.json"));
   writeJsonAtomic(statePath, manifest);
   return { mode: options.mode, statePath, ...manifest };
+}
+
+export async function runSchema(options) {
+ const coordinator = new Coordinator();
+ try { await coordinator.acquire("transfer",1,"shared-zone-schema"); return await runSchemaInternal(options,coordinator); } finally { coordinator.close(); }
 }
 
 async function main() {

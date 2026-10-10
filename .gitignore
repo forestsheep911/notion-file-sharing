@@ -3,3 +3,5 @@
 *.notion-upload.json
 *.tmp
 node_modules/
+
+.local-data/
